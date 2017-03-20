@@ -36,11 +36,18 @@ object ReaderEffect {
       case Pure(a) => k(a)
       case Get(k1) => get(k1 >>> k)
     }
-    @tailrec
+
     def tailRecM[A, B](a: A)(f: A => It[I, Either[A, B]]): It[I, B] = f(a) match {
       case Pure(Right(b)) => pure(b)
       case Pure(Left(a1)) => tailRecM(a1)(f)
-      case Get(k) => ???
+      case Get(k) => get { i =>
+        k(i).flatMap { (j: Either[A, B]) =>
+          j match {
+            case Left(a1) => tailRecM(a1)(f)
+            case Right(b) => pure(b)
+          }
+        }
+      }
     }
   }
 
