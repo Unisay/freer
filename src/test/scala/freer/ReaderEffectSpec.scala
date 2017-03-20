@@ -2,8 +2,14 @@ package freer
 
 import cats.implicits._
 import freer.ReaderEffect._
+import org.typelevel.discipline.specs2.Discipline
+import cats.laws.discipline._
+import org.specs2.Specification
 
-class ReaderEffectSpec extends org.specs2.mutable.Specification {
+class ReaderEffectSpec extends Specification with Discipline { def is = s2"""
+  runReader provides same value multiple times    $testRunReader
+  feedReader provides values from list            $testFeedReader
+  """
 
   def replicate[A](n: Int, a: A): List[A] = List.fill(n)(a)
 
@@ -17,11 +23,8 @@ class ReaderEffectSpec extends org.specs2.mutable.Specification {
       r(0)
     }
 
-  "runReader provides same value multiple times" in {
-    runReader(1, addN(3)) must_=== 3
-  }
+  def testRunReader = runReader(1, addN(3)) must_=== 3
+  def testFeedReader = feedReader(1 :: 2 :: 3 :: Nil, addN(3)) must_=== 6
 
-  "feedReader provides values from list" in {
-    feedReader(1 :: 2 :: 3 :: Nil, addN(3)) must_=== 6
-  }
+//  checkAll("It", MonadTests[It[Int, ?]].monad[Int, Int, Int])
 }
